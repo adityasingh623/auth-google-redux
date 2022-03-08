@@ -1,70 +1,98 @@
-# Getting Started with Create React App
+# Google Authentication Using Firebase, React and Redux
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The is a basic application which just demonstrates the ```login``` and ```logout``` functionality using Google's authentication in Firebase.
+**Class Based Component Used**.
 
-## Available Scripts
 
-In the project directory, you can run:
+## Project set-up
 
-### `npm start`
+Go, to firebase make a project, give your usual steps and make a project, and uder the section ```your apps``` choose ```web application```. 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The easiest way to find you configuration is to your project, then click on ```Project Overview``` on the top-left side and scroll down under section ```your apps``` and you would find your details. 
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Adding Firebase Config
 
-### `npm test`
+Open your project folder where you have created your react app and install the following dependencies ```redux```, ```react-redux```, ```redux-thunk```, ```firebase``` and ```react-firebase-hooks```, using ```npm install```. 
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Create a folder ```src/auth/GoogleAuth``` and create a file named ```firebase-config.js```. 
 
-### `npm run build`
+Remove the default imports and add these following imports 
+```javascript
+import  firebase  from  'firebase/compat/app';
+import  'firebase/compat/auth';
+import  'firebase/compat/firestore';
+```
+Paste your ```firebaseConfig``` object as it is. Later add the following code
+```javascript
+// Initialize Firebase
+const  firebaseApp = firebase.initializeApp(firebaseConfig);
+// Use these for db & auth
+const  db = firebaseApp.firestore();
+const  auth = firebase.auth();
+const  provider = new  firebase.auth.GoogleAuthProvider();
+export { auth, db, provider };
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Please refer to the file ```src/auth/google/firebase-config.js``` file for this step. Paste your own appropriate ```apiKey```, and ```appId``` which you get from your own project details from Firebase.
+## Actions and Reducers
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+We use Redux for state managment in our application. Redux helps us maintain a app wide state, where we would store in our user details, such as, if the user has logged in or not, if logged in, storing it's username, email, authentication token, etc. Should the user chooses to logout, we would just remove the following information from our redux store. 
+The initial state of our application would look something like this, 
+```javascript
+const  INITIAL_STATE = {
+	userFirstName :  '',
+	userLastName :  '',
+	userEmail :  '',
+	userId :  '',
+	userAccessToken :  '',
+	userIdToken :  '',
+	userAuthProvider :  '',
+	loginStatus :  false
+};
+```
+Now we have two action creators with ```action.type``` as follows, ```ATTEMPT_SIGN_IN``` which tries to contact google login API to attempt user login, and  ```ATTEMPT_SIGN_OUT``` to attempt user logout. 
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Now we use ```redux-thunk``` to make a ```async``` call to google, while processing login and logout functions. The code for which could be found within ```src/actions/index.js```. 
 
-### `npm run eject`
+Now please attention to the following code
+```javascript
+let  loginResponse = {};
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+await  auth.signInWithPopup(provider)
+.then(response  =>  loginResponse = response)
+.catch((error) =>  alert(error.message));
+```
+After sucessfull authentication with Google we would be a ```response``` object, which we later equated to ```loginResponse``` as ```response``` is a local variable inside the method. 
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Now you may ```console.log(loginResponse);``` to see what details are being fetched. We use this ```loginResponse``` object to fetch the details of the user from Google's database. After this fetching ```disptach()``` function with appropriate action creator is fired to the reducer. Again refer the ```src/actions/index.js``` file to understand better, and see how the initial state is being updated and the data being used.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The entire logic is to render **sign in** component when the initial state's ```loginStatus === false``` and render **sign out** component when it's ```true```.  
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The **reducers** are pretty much self-explanatory, as all they do is take in a ```state``` and a ```action``` and update the ```state```.  Please note that the main code for reducers are in ```src/reducers/userAuthReducer.js```. The main ```index.js``` file in the reducers folder is the one exposed to the app, by importing the ```combineReducers``` from ```redux``` library. 
 
-## Learn More
+Now please focus your attention into the line
+```javascript
+.catch((error) =>  alert(error.message));
+```
+This project is just to make sure we implement the Google's authentication correctly, hence the ```error``` was just alerted ( is that even a word? ) out. Should you choose you may add your logic here.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The best way to test that is to click on login button and then close the Google's popup window where it asks for user's credential.
+## React Component
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Now, the entire component which handles and renders the entire process is ```WelcomePage.js``` which is inside ```src/components``` folder. This is a class based component, which uses ```connnect()``` method to connect it to the redux store. 
 
-### Code Splitting
+The actions creators were also imported to initiate an action when the button click event occurs. 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Please look at the component's source to get a clear understanding. 
 
-### Analyzing the Bundle Size
+## UI Library used
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Sematic UI was used to provide basic button styling to this project. It was inject into our ```index.html``` file directly.
 
-### Making a Progressive Web App
+Should you wish you inject it into your project, just copy and paste the below code into the ```header``` of your ```index.html``` file. 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```html
+<link  rel="stylesheet"  href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"  integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ=="  crossorigin="anonymous"  referrerpolicy="no-referrer"  />
+```
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Thank you!
