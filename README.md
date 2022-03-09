@@ -54,6 +54,8 @@ Now we have two action creators with ```action.type``` as follows, ```ATTEMPT_SI
 
 Now we use ```redux-thunk``` to make a ```async``` call to google, while processing login and logout functions. The code for which could be found within ```src/actions/index.js```. 
 
+Please note that you may store ```userAccessToken``` and ```userIdToken``` as a ```session```, for protecting you resources, it's not covered in this tutorial, but you may read about it should you wish to do it.
+
 Now please attention to the following code
 ```javascript
 let  loginResponse = {};
